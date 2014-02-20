@@ -1,6 +1,9 @@
 #!/opt/local/bin/python
 import numpy as np
+import pylab as pl
 from sklearn.preprocessing import Imputer
+from sklearn import svm
+from sklearn.metrics import roc_curve, auc
 
 TAGMAP = [dict() for i in range(40)]
 
@@ -40,6 +43,40 @@ def file2matrix(filename):
     returnMat = imp.transform(returnMat)
     return returnMat
 
+def file2label(labelfile):
+    label=[]
+    fr = open(labelfile)
+    lines = fr.readlines()  
+    for line in lines:
+        label.append(int(line.strip()))
+    return label
+    
+
+def main(trainfile, labelfile):
+    mat = file2matrix(trainfile)
+    label = file2label(labelfile)
+    dataSize = 100
+    X_train, X_test = mat[:dataSize], mat[dataSize:]
+    y_train, y_test = label[:dataSize], label[dataSize:]
+    classifier = svm.SVC(kernel='linear', probability=True, random_state=0)
+    probas_ = classifier.fit(X_train, y_train).predict_proba(X_test)
+
+    # Compute ROC curve and area the curve
+    fpr, tpr, thresholds = roc_curve(y_test, probas_[:, 1])
+    roc_auc = auc(fpr, tpr)
+    print("Area under the ROC curve : %f" % roc_auc)
+
+    # Plot ROC curve
+    pl.clf()
+    pl.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+    pl.plot([0, 1], [0, 1], 'k--')
+    pl.xlim([0.0, 1.0])
+    pl.ylim([0.0, 1.0])
+    pl.xlabel('False Positive Rate')
+    pl.ylabel('True Positive Rate')
+    pl.title('Receiver operating characteristic example')
+    pl.legend(loc="lower right")
+    pl.show()
 
 if __name__ == "__main__":
-    file2matrix("data/orange_small_test.data")
+    main("data/orange_small_test.data", "data/orange_small_train_appetency.labels")
