@@ -2,8 +2,30 @@
 import numpy as np
 import pylab as pl
 from sklearn.preprocessing import Imputer
-from sklearn import svm
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import roc_curve, auc
+from sklearn.feature_extraction import DictVectorizer
+
+def file2binMatrix(filename):
+    fr = open(filename)
+    fr.readline()
+    arrayOLines = fr.readlines()
+    measure = []
+    #use DictVectorizer to process catagorical feture
+    for line in arrayOLines:
+        words = line.rstrip('\r\n').split('\t')
+        words[:190] = map(
+            lambda x: float(x) if x.isdigit() else np.nan, words[:190])
+        measure.append(dict( zip(range(len(words)), words) ))
+    vec = DictVectorizer()  
+    vec.fit(measure[:1000])
+    returnMat = vec.transform(measure)
+     
+    #replcacec missing values into mean of values
+    imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
+    returnMat = imp.fit_transform(returnMat)
+    return returnMat
+
 
 TAGMAP = [dict() for i in range(40)]
 
@@ -29,8 +51,11 @@ def file2matrix(filename):
         s = set(returnTag[i])
         index = 1
         for tag in s:
-            TAGMAP[i][tag] = index
-            index += 1
+            if tag=="": 
+                TAGMAP[i][tag] = np.nan
+            else:
+                TAGMAP[i][tag] = index
+                index += 1
 
     #transform tag into number and add into returnMat 
     for i in range(rows):
@@ -53,13 +78,17 @@ def file2label(labelfile):
     
 
 def main(trainfile, labelfile):
-    mat = file2matrix(trainfile)
+    mat = file2binMatrix(trainfile)
+    #to do: PCA 
     label = file2label(labelfile)
-    dataSize = 100
+    dataSize = mat.shape[0]/3
     X_train, X_test = mat[:dataSize], mat[dataSize:]
     y_train, y_test = label[:dataSize], label[dataSize:]
-    classifier = svm.SVC(kernel='linear', probability=True, random_state=0)
-    probas_ = classifier.fit(X_train, y_train).predict_proba(X_test)
+    clf = SGDClassifier(loss='modified_huber', penalty="l2")
+    print "fitting......"
+    clf.fit(X_train, y_train)
+    print "fit done"
+    probas_ = clf.predict_proba(X_test)
 
     # Compute ROC curve and area the curve
     fpr, tpr, thresholds = roc_curve(y_test, probas_[:, 1])
