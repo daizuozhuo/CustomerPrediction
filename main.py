@@ -6,6 +6,7 @@ from sklearn.preprocessing import Imputer
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import roc_curve, auc
 from sklearn.feature_extraction import DictVectorizer
+from sklearn import cross_validation
 from sklearn.ensemble import RandomForestClassifier
 
 
@@ -69,21 +70,13 @@ def file2label(labelfile):
 
 def main(trainfile, labelfile):
     mat = file2binMatrix(trainfile)
-    label = file2label(labelfile)
-    dataSize = mat.shape[0]/2
-    X_train, X_test = mat[:dataSize], mat[dataSize:]
-    y_train, y_test = label[:dataSize], label[dataSize:]
-    #for i, cri in itertools.product(range(10,100, 10), ['gini', 'entropy']):
+    label = np.array(file2label(labelfile))
     i, cri = 100, 'entropy'
     clf = RandomForestClassifier(n_estimators=i, criterion=cri)
     print "fitting...... %d %s" % (i, cri)
-    clf.fit(X_train, y_train)
-    probas_ = clf.predict_proba(X_test)
-
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    print("Area under the ROC curve : %f" % roc_auc)
+    roc_auc = cross_validation.cross_val_score(clf, mat, label,
+                                               scoring='roc_auc', cv=2)
+    print "Area under the ROC curve :", roc_auc
 
 if __name__ == "__main__":
     main("data/orange_small_train.data", "data/orange_small_train_appetency.labels")

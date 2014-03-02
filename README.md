@@ -11,11 +11,14 @@ What we have done and what we should do next
 ##Classifiers:
 * [x] random forests
 
-   Area 0.67. Generally, entropy performs well than gini index and directly
+   Area 0.68. Generally, entropy performs well than gini index and directly
   proportional to the number of estimators.
+
 * [ ] boosted trees
 * [ ] logistic regression
 * [x] SGD classifier
 
 ##Evaluation:
-* [ ] 2-fold cross-validataion approach
+* [x] k-fold cross-validataion approach
+
+   can replace k with any number, default is 3
