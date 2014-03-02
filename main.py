@@ -1,4 +1,5 @@
 #!/opt/local/bin/python
+from collections import Counter
 import numpy as np
 import pylab as pl
 from sklearn.preprocessing import Imputer
@@ -6,20 +7,40 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import roc_curve, auc
 from sklearn.feature_extraction import DictVectorizer
 
+
 def file2binMatrix(filename):
     fr = open(filename)
     fr.readline()
     arrayOLines = fr.readlines()
-    measure = []
-    #use DictVectorizer to process catagorical feture
+
+    catags = [[] for i in range(40)]
+    data = []
     for line in arrayOLines:
-        words = line.rstrip('\r\n').split('\t')
-        words[:190] = map(
-            lambda x: float(x) if x.isdigit() else np.nan, words[:190])
-        measure.append(dict( zip(range(len(words)), words) ))
+        line = line.rstrip('\r\n').split('\t')
+        line[:190] = map(
+            lambda x: float(x) if x.isdigit() else np.nan, line[:190])
+        data.append(line)
+        for i in range(40):
+            catags[i].append(line[190+i])
+
+    #only encode the 10 most common values for each catagorical feature
+    keys= [[] for i in range(40)]
+    for i in range(40):
+        c = Counter(catags[i])
+        for key, number in c.most_common(10):
+            keys[i].append(key)
+
+    #replae other values to empty
+    measure = []
+    for line in data:
+        for i in range(40):
+            if not line[190+i] in keys[i]:
+                line[190+i] = ''
+        measure.append(dict( zip(range(len(line)), line) ))
+
+    #use DictVectorizer to process catagorical feture
     vec = DictVectorizer()  
-    vec.fit(measure[:1000])
-    returnMat = vec.transform(measure)
+    returnMat = vec.fit_transform(measure)
      
     #replcacec missing values into mean of values
     imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
