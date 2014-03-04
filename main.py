@@ -108,4 +108,4 @@ def main(trainfile, labelfile):
     pl.show()
 
 if __name__ == "__main__":
-    main("data/orange_small_test.data", "data/orange_small_train_appetency.labels")
+    main("data/orange_small_test.data", "data/orange_small_train_churn.labels")
