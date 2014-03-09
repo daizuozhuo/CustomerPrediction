@@ -31,9 +31,7 @@ def file2binMatrix(filename):
         c = Counter(catags[i])
         for key, number in c.most_common(10):
             keys[i].append(key)
-
     #replace other values to empty
-    #measure = []
     returnMat = []
     for line in data:
         for i in range(40):
@@ -42,14 +40,22 @@ def file2binMatrix(filename):
             else:
                 line[190+i] = 10
         returnMat.append(line)
-        #measure.append(dict( zip(range(len(line)), line) ))
+ 
+    '''
+    measure = []
+    for line in data:
+        for i in range(40):
+            if line[190+i] in keys[i]:
+                line[190+i] = keys[i].index(line[190+i])
+            else:
+                line[190+i] = 10
+        measure.append(dict( zip(range(len(line)), line) ))
 
-    """
     #use DictVectorizer to process catagorical feture
     vec = DictVectorizer()  
     returnMat = vec.fit_transform(measure)
-    """ 
 
+    '''
     #replcacec missing values into mean of values
     imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
     returnMat = imp.fit_transform(returnMat)
