@@ -14,8 +14,10 @@ What we have done and what we should do next
    Area 0.68. Generally, entropy performs well than gini index and directly
   proportional to the number of estimators.
 
-* [ ] boosted trees
-* [ ] logistic regression
+* [x] boosted trees
+
+    Area 0.73
+
 * [x] SGD classifier
 
 ##Evaluation:

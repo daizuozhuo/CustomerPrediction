@@ -1,13 +1,12 @@
 #!/opt/local/bin/python
 from collections import Counter
-import itertools
 import numpy as np
 from sklearn.preprocessing import Imputer
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import roc_curve, auc
 from sklearn.feature_extraction import DictVectorizer
 from sklearn import cross_validation
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 
 
 def file2binMatrix(filename):
@@ -41,6 +40,7 @@ def file2binMatrix(filename):
                 line[190+i] = 10
         returnMat.append(line)
  
+
     '''
     measure = []
     for line in data:
@@ -78,11 +78,28 @@ def main(trainfile, labelfile):
     mat = file2binMatrix(trainfile)
     label = np.array(file2label(labelfile))
     i, cri = 100, 'entropy'
-    clf = RandomForestClassifier(n_estimators=i, criterion=cri)
-    print "fitting...... %d %s" % (i, cri)
+    #clf = RandomForestClassifier(n_estimators=i, criterion=cri)
+    clf = AdaBoostClassifier()
+    probas_ = clf.fit(mat, label).predict_proba(mat)
+    # Compute ROC curve and area the curve
+    fpr, tpr, thresholds = roc_curve(label, probas_[:, 1])
+    roc_auc = auc(fpr, tpr)
+    outfile = open(labelfile.split('_')[3], 'w')
+    shape = probas_.shape
+    for i in range(shape[0]):
+        outfile.write("%f %f" % (probas_[i][0], probas_[i][1]))
+    outfile.close()
+    '''
+    X_train, X_test, y_train, y_test = cross_validation.train_test_split(\
+        mat, label, test_size=0.4, random_state=0)
+    probas_ = clf.fit(X_train, y_train).predict_proba(X_test)
+
     roc_auc = cross_validation.cross_val_score(clf, mat, label,
                                                scoring='roc_auc', cv=2)
+    '''
     print "Area under the ROC curve :", roc_auc
 
 if __name__ == "__main__":
     main("data/orange_small_train.data", "data/orange_small_train_appetency.labels")
+    #main("data/orange_small_train.data", "data/orange_small_train_churn.labels")
+    #main("data/orange_small_train.data", "data/orange_small_train_upselling.labels")

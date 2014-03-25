@@ -18,11 +18,14 @@ this method. Both above methods are tried in our project to maximum
 predict accuracy, then we find the binarization method can achieve higher
 ROC value while consuming more time training.
 
-We also noticed that many variables have a large number of missing values
+We also noticed that some variables have a large number of missing values
 and some of the categorical have a huge vocabulary. For the missing
 numerical values, we followed the standard approach of imputing the missing
 value by the mean of the features. And for the missing categorical values,
-we treat them as a separate value.
-
+we treat them as a separate value. In addition, in order to avoid an
+explosion in the number of features from the variables with a huge
+vocabulary, we only encode the 10 most values of each categorical attribute
+rather than all the values.
 
 ##Classification methods
+
