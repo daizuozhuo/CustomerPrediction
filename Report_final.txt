@@ -1,0 +1,17 @@
+In this task, we use a variety of 3-party library on data mining to perform our classification, including NumPy, Pandas, SciKit-Learn.
+
+Pre-processing
+One thing worth noted is that many entries of training data is actually missing value. Another issue is the mixed data types composed of categorical and numerical data. These two problems are the main focus of the pre-processing step.
+First we use Pandas.read_csv function to read data of 230 variables. Then the categorical (Column 190 - ) and numerical data (Column 0 - 189) are processed differently. 
+For numerical data, we drop those variables that composed of too many missing values (less than 100, in practice). This effectively eliminate 16 columns and all of them are completely empty. We then impute the missing value using the mean of that columns.
+In order to process categorical data, especially make it compatible with the SciKit-Learn pipeline, we encode the values using 1 to k binarization. In practice, these k values need to fulfil two conditions: (a) the frequency of that value has to be greater than 100 (b) it is among the top 10 most frequent values in the column. 
+Condition (a) is to reduce the number of non-predictive values, as values of some columns are really diverse, i.e. there are more than 500 different values of roughly same frequency in that column and any classifiers trained by these values are error-prone. Condition (b) is to effectively limit the growth of dimensionality brought by binarization, as without such condition the data size will expand to more than 10,000 columns.
+After pre-processing, the 16 empty numerical columns are eliminated, and the number of categorical columns expanded from 40 to 207. Combining two will yield the final training data with dimension 50,000 * 391.
+
+Training
+We employ SciKit-Learn, a very popular 3-rd party library on machine learning, in the training part. We use the GridSearchCV built-in functionality in SciKit-Learn. We only use the appetency label to do search, under the constraint of limited time. Different classifiers were attempted, with additional pre-processing steps. The grid search uses 3-fold cross validation, with inherit scoring function ROC-AUC, as indicated by our project grading scheme.
+In first phase, we focused on RandomForest classifier, and simple grid search on number of weak estimators shows 100 is the best in range of [10,20,50,100]. It is suggested that more weak estimators will be better in general, but it only produces roughly the same result in our case and thus we sticked to 100. The AUC is 0.72, as our base line.
+Next, normalizing and scaling were tried before classification. It shows that normalization actually reduce the power and AUC decreases to 0.63 with
+L2 norm, with L1 norm even worse. Scaling (with standard deviation and without mean) slightly improved the result to 0.74, thus seems not promising.
+PCA coupled with SVM is also attempted with grid search of PCA's number of dimensions, whiten or not, and SVM's parameter C. It shows that the best result is acquired when whiten is true, C equals 1, and number of dimensions roughly equal to 120. However, the optimal score of PCA coupled SVM is around 0.74 as well.
+Last method we tried is Adaptive Boosting, also searched number of estimators. It was suggested that greatly improved result, i.e., 0.81, could be obtained with number of estimators roughly around 10. Just for record, all ensemble methods we tried are employing decision tree as weak estimator.
